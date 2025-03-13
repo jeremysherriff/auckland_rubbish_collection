@@ -26,3 +26,6 @@ The rest of the setup is the same as any other Integration.
 5.  Scroll or Search for **Auckland Council Rubbish Collection** and click to add it
 6.  Enter an appropriate name for the location/address, and the 11-digit number from the URL above.
 
+## Additional Configuration
+- Sensor data is updated every 3 hours by default. If this schedule does not work for you, can can use an automation to update the entities as required.
+- 
