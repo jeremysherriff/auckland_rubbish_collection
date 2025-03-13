@@ -1,0 +1,50 @@
+{
+  "config": {
+    "title": "Auckland Council Rubbish Collection",
+    "step": {
+      "user": {
+        "title": "Auckland Rubbish Collection Setup",
+        "description": "Get your Address ID from the [Auckland Council Find Your Collection Day]({url}) search page. The Address ID is the 11 digits after the 'an=' part of the results page url. See the Help for more information if needed.",
+        "data": {
+          "address_name": "Address Name",
+          "address_id": "Address Number from the Find Your Collection Day url"
+        },
+        "data_description": {
+          "address_name": "A name to identify this address (e.g. Home)",
+          "address_id": "The 11-digit number from the collection day url (e.g. 12345678901)"
+        }
+      }
+    },
+    "error": {
+      "invalid_id_length": "Address ID must be exactly 11 characters long",
+      "invalid_id_format": "Address ID must contain only digits (0-9)",
+      "cannot_connect": "Failed to connect",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This address is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update Auckland Rubbish Collection",
+        "description": "Get your Address ID from the [Auckland Council Find Your Collection Day]({url}) search page. The Address ID is the 11 digits after the 'an=' part of the results page url.",
+        "data": {
+          "address_name": "Address Name",
+          "address_id": "Address Number from the Find Your Collection Day url"
+        },
+        "data_description": {
+          "address_name": "A name to identify this address (e.g. Home)",
+          "address_id": "The 11-digit number from the collection day url (e.g. 12345678901)"
+        }
+      }
+    },
+    "error": {
+      "invalid_id_length": "Address ID must be exactly 11 characters long",
+      "invalid_id_format": "Address ID must contain only digits (0-9)",
+      "cannot_connect": "Failed to connect",
+      "unknown": "Unexpected error"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "domain": "auckland_rubbish_collection",
+  "name": "Auckland Council Rubbish Collection",
+  "documentation": "https://github.com/jeremysherriff/auckland_rubbish_collection",
+  "dependencies": [],
+  "codeowners": ["@jeremysherriff"],
+  "requirements": ["beautifulsoup4"],
+  "iot_class": "cloud_polling",
+  "version": "2025.1.0rc1",
+  "config_flow": true
+}
