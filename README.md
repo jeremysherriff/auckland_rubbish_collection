@@ -13,7 +13,7 @@ Or: manually add this github repo as a custom repository in HACS then search for
 You will need to restart Home Assistant before proceeding.
 
 ## Setup
-Requires that you find an enter the "an" value from the Auckland Council [Find your rubbish, recycling, and food scraps collection day](https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/rubbish-recycling-collection-days.aspx) page.
+Requires that you find the "an" value from the search results page url after searching your location on the Auckland Council [Find your rubbish, recycling, and food scraps collection day](https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/rubbish-recycling-collection-days.aspx) page.
 
 1.  Browse to the above page
 2.  Enter your address
@@ -27,5 +27,5 @@ The rest of the setup is the same as any other Integration.
 6.  Enter an appropriate name for the location/address, and the 11-digit number from the URL above.
 
 ## Additional Configuration
-- Sensor data is updated every 3 hours by default. If this schedule does not work for you, can can use an automation to update the entities as required.
-- 
+- Sensor data is updated every 3 hours by default. If this schedule does not work for you, can can use an automation to [define a custom polling interval](https://www.home-assistant.io/common-tasks/general/#why-use-an-automation-instead-of-changing-the-integrations-polling-configuration)
+- The Geolocation Address sensor is disabled by default - this sensor was intended to assist me with being sure the address being polled was correct. Let me know if you find it useful for something and think it should be enabled by default.
