@@ -1,4 +1,4 @@
-# Home Assistant HACS integration for Auckland Council Rubbish Collection
+# Auckland Council Rubbish Collection
 
 An alternative if you don't want to leverage a Calendar in Home Assistant for the rubbish/recycling collection schedules.
 
