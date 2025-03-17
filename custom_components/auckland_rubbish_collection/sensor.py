@@ -33,8 +33,9 @@ class RubbishCollectionSensor(CoordinatorEntity, SensorEntity):
         # Use slugified address_name for unique IDs
         self._attr_name = f"{coordinator.address_name} {sensor_type.replace('_', ' ').title()}"
         self._attr_unique_id = f"{DOMAIN}_{slugify(coordinator.address_name)}_{sensor_type}"
-        self._attr_icon = self._determine_icon(sensor_type)
-
+        
+        # Don't set _attr_icon in __init__ anymore, we'll use the property instead
+        
         if sensor_type == "geolocation_address":
             self.entity_registry_enabled_default = False
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -42,6 +43,29 @@ class RubbishCollectionSensor(CoordinatorEntity, SensorEntity):
     @property
     def state(self):
         return self.coordinator.data.get(self.sensor_type, None)
+        
+    @property
+    def icon(self):
+        """Return the icon to use for the sensor."""
+        if self.sensor_type == "rubbish":
+            return "mdi:trash-can"
+        if self.sensor_type == "recycling":
+            return "mdi:recycle"
+        if self.sensor_type == "food_scraps":
+            return "mdi:compost"
+        if self.sensor_type == "geolocation_address":
+            return "mdi:map-marker"
+        if self.sensor_type == "next_collection_type":
+            collection_type = self.coordinator.data.get(self.sensor_type, "Unknown")
+            if "Rubbish & Recycling" in collection_type:
+                return "mdi:recycle"
+            elif "Rubbish" in collection_type:
+                return "mdi:trash-can"
+            elif "Recycling" in collection_type:
+                return "mdi:recycle"
+            else:
+                return "mdi:calendar"
+        return "mdi:help-circle"  # Default fallback icon
 
     @property
     def device_info(self):
@@ -53,16 +77,3 @@ class RubbishCollectionSensor(CoordinatorEntity, SensorEntity):
             "model": "Rubbish Collection Service",
             "entry_type": "service",  # This indicates it's a service, not a device
         }
-
-    def _determine_icon(self, sensor_type: str) -> str:
-        if sensor_type == "rubbish":
-            return "mdi:trash-can"
-        if sensor_type == "recycling":
-            return "mdi:recycle"
-        if sensor_type == "food_scraps":
-            return "mdi:compost"
-        if sensor_type == "geolocation_address":
-            return "mdi:map-marker"
-        if sensor_type == "next_collection_type":
-            return "mdi:calendar"
-        return "mdi:help-circle"
