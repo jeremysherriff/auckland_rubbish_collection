@@ -7,6 +7,6 @@
   "requirements": ["beautifulsoup4"],
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/jeremysherriff/auckland_rubbish_collection/issues",
-  "version": "2025.3.0b1",
+  "version": "2025.3.0b2",
   "config_flow": true
 }
