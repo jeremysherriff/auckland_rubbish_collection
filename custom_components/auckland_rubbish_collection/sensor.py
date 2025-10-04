@@ -1,5 +1,6 @@
 import datetime
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import EntityCategory
 from .const import DOMAIN, _LOGGER
@@ -12,11 +13,11 @@ def slugify(name: str) -> str:
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the rubbish collection sensors."""
     _LOGGER.debug("Setting up sensors for entry: %s", entry.title)
-    
+
     # Get the coordinator
     coordinator = get_coordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-    
+
     async_add_entities([
         RubbishCollectionSensor(coordinator, "rubbish"),
         RubbishCollectionSensor(coordinator, "recycling"),
@@ -30,12 +31,14 @@ class RubbishCollectionSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, sensor_type):
         super().__init__(coordinator)
         self.sensor_type = sensor_type
+        _LOGGER.debug("Adding Sensor: %s", self.sensor_type)
         # Use slugified address_name for unique IDs
         self._attr_name = f"{coordinator.address_name} {sensor_type.replace('_', ' ').title()}"
         self._attr_unique_id = f"{DOMAIN}_{slugify(coordinator.address_name)}_{sensor_type}"
-        
-        # Don't set _attr_icon in __init__ anymore, we'll use the property instead
-        
+
+        if sensor_type in ("rubbish", "recycling", "foodscraps"):
+            self._attr_device_class = SensorDeviceClass.DATE
+
         if sensor_type == "geolocation_address":
             self.entity_registry_enabled_default = False
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -43,7 +46,7 @@ class RubbishCollectionSensor(CoordinatorEntity, SensorEntity):
     @property
     def state(self):
         return self.coordinator.data.get(self.sensor_type, None)
-        
+
     @property
     def icon(self):
         """Return the icon to use for the sensor."""
@@ -66,6 +69,45 @@ class RubbishCollectionSensor(CoordinatorEntity, SensorEntity):
             else:
                 return "mdi:calendar"
         return "mdi:help-circle"  # Default fallback icon
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str]:
+        """Return extra attributes for the sensor."""
+
+        if self.sensor_type in ("rubbish", "recycling", "food_scraps"):
+            attributes = {}
+            value = self.coordinator.data.get(self.sensor_type, None)
+            if value:
+                try:
+                    day_name = datetime.datetime.strptime(value, "%Y-%m-%d").strftime("%A")
+                    attributes["collection_day"] = day_name
+                    _LOGGER.debug("Adding attribute to Sensor [%s] collection_day: %s", self.sensor_type, day_name)
+                except ValueError as e:
+                    pass
+            return attributes
+
+        if self.sensor_type == "next_collection_type":
+            attributes = {}
+            next_type = self.coordinator.data.get(self.sensor_type, None)
+
+            # Normalize key to match coordinator structure
+            key_map = {
+                "Rubbish": "rubbish",
+                "Rubbish & Recycling": "recycling"
+            }
+
+            lookup_key = key_map.get(next_type)
+            next_date = self.coordinator.data.get(lookup_key) if lookup_key else None
+
+            if next_date:
+                try:
+                    day_name = datetime.datetime.strptime(next_date, "%Y-%m-%d").strftime("%A")
+                    attributes["date"] = next_date
+                    attributes["day"] = day_name
+                    _LOGGER.debug("Adding day/date attributes to Sensor [%s]", self.sensor_type)
+                except ValueError:
+                    _LOGGER.warning("Invalid ISO date when adding day/date attributes to Sensor [%s]: %s, %s", self.sensor_type, lookup_key, next_date)
+            return attributes
 
     @property
     def device_info(self):
