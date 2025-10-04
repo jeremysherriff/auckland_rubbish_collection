@@ -7,8 +7,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN, _LOGGER
 
-SCAN_INTERVAL = timedelta(hours=3)
-BASE_URL = "https://www.aucklandcouncil.govt.nz"
+SCAN_INTERVAL = timedelta(hours=5)
+BASE_URL = "https://new.aucklandcouncil.govt.nz"
 
 class AucklandRubbishCollectionCoordinator(DataUpdateCoordinator):
     """Fetch rubbish collection data periodically."""
@@ -18,36 +18,62 @@ class AucklandRubbishCollectionCoordinator(DataUpdateCoordinator):
         self.address_id = address_id
         self.address_name = address_name
 
-    def parse_collection_date(self, text):
-        """Convert collection text (e.g., 'Thursday 13 March') into a standardized format."""
+    def parse_collection_date(self, text: str) -> str | None:
+        """Convert collection text (e.g., 'Thursday, 13 March') into ISO 8601 format ('YYYY-MM-DD')"""
+        from dateutil import parser
+
         try:
-            parts = text.split(" ")
-            # Expecting format like "Thursday 13 March"
-            day_name, day, month = parts[0], parts[1], parts[2]
-            year = datetime.datetime.now().year  # Assume current year
-            parsed_date = datetime.datetime.strptime(f"{day} {month} {year}", "%d %B %Y")
-            return parsed_date.strftime("%A %d %B")  # Ensure consistent format
-        except (ValueError, IndexError):
-            return None  # Return None if parsing fails
+            parsed = parser.parse(text, dayfirst=True)
+            return parsed.date().isoformat()
+        except Exception:
+            return None
+
+    def parse_collection_address(self, soup: BeautifulSoup) -> str:
+        """
+        Extracts the full address block from the HTML text.
+        Returns a string like '100A My Street, Auckland, Auckland 1001'.
+        """
+        address_block = soup.find("h2")
+        if not address_block:
+            return "Unknown address"
+
+        street = address_block.find("span", class_="heading")
+        suburb = address_block.find("span", class_="subheading")
+
+        if street and suburb:
+            return f"{street.get_text(strip=True)}, {suburb.get_text(strip=True)}"
+        elif street:
+            return street.get_text(strip=True)
+        elif suburb:
+            return suburb.get_text(strip=True)
+        else:
+            return address_block.get_text(strip=True)
 
     async def _async_update_data(self):
-        url = f"{BASE_URL}/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an={self.address_id}"
+        url = f"{BASE_URL}/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days/{self.address_id}.html"
         session = async_get_clientsession(self.hass)
         try:
+            _LOGGER.debug("Fetching collection data for entry: %s", self.address_name)
             async with session.get(url) as response:
                 response_text = await response.text()
             soup = BeautifulSoup(response_text, "html.parser")
-            collection_info = soup.find_all(attrs={"class": "collectionDayDate"})
-            if not collection_info:
-                _LOGGER.error("Unexpected response format: no collection data found")
-                return {}
 
             # Extract geolocation address
-            address_blocks = soup.find_all(attrs={"class": "m-b-2"})
-            geolocation_address = address_blocks[0].string.strip() if address_blocks and address_blocks[0].string else None
+            geolocation_address = self.parse_collection_address(soup)
 
             # Initialize collection dates
             rubbish, recycling, food_scraps = None, None, None
+
+            # Extract collection information
+            collection_cards = soup.find_all("div", class_="acpl-schedule-card")
+            collection_info = []
+            for card in collection_cards:
+                bin_entries = card.find_all("p", class_="mb-0 lead")
+                for entry in bin_entries:
+                    collection_info.append(entry)
+
+            if not collection_info:
+                _LOGGER.error("Unexpected response format: no collection data found")
 
             # Parse each collection entry and assign to the correct type based on keywords
             for entry in collection_info:
@@ -62,37 +88,19 @@ class AucklandRubbishCollectionCoordinator(DataUpdateCoordinator):
                     raw_date = text.split(":", 1)[-1].strip() if ":" in text else text
                     food_scraps = self.parse_collection_date(raw_date)
 
-            # Determine next collection type based on dates
-            today = datetime.datetime.now().strftime("%A %d %B")
-            if rubbish and recycling:
-                if rubbish == recycling:
-                    next_collection_type = "Rubbish & Recycling"
-                elif rubbish == today:
-                    next_collection_type = "Rubbish"
-                elif recycling == today:
-                    next_collection_type = "Recycling"
+            # Determine next collection type
+            try:
+                if rubbish and recycling:
+                    if rubbish == recycling:
+                        next_collection_type = "Rubbish & Recycling"
+                    else:
+                        next_collection_type = "Rubbish"
+                elif rubbish:
+                        next_collection_type = "Rubbish"
                 else:
-                    # Determine which collection is coming next
-                    next_collection_type = "Unknown"
-                    try:
-                        today_dt = datetime.datetime.strptime(today, "%A %d %B")
-                        rubbish_dt = datetime.datetime.strptime(rubbish, "%A %d %B")
-                        recycling_dt = datetime.datetime.strptime(recycling, "%A %d %B")
-                        
-                        # Adjust for dates in next year
-                        if rubbish_dt < today_dt:
-                            rubbish_dt = rubbish_dt.replace(year=rubbish_dt.year + 1)
-                        if recycling_dt < today_dt:
-                            recycling_dt = recycling_dt.replace(year=recycling_dt.year + 1)
-                            
-                        if rubbish_dt < recycling_dt:
-                            next_collection_type = "Rubbish"
-                        else:
-                            next_collection_type = "Recycling"
-                    except ValueError:
-                        next_collection_type = "Rubbish"  # Default if dates couldn't be parsed
-            else:
-                next_collection_type = "Unknown"
+                    next_collection_type = None
+            except Exception:
+                next_collection_type = None
 
             return {
                 "rubbish": rubbish,
@@ -109,15 +117,15 @@ def get_coordinator(hass, entry):
     """Get or create a coordinator for the given entry."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
-        
+
     if entry.entry_id in hass.data[DOMAIN]:
         return hass.data[DOMAIN][entry.entry_id]
-        
+
     # Get address_id from options if available, otherwise from data
     address_id = entry.options.get("address_id", entry.data.get("address_id"))
     address_name = entry.data.get("address_name", address_id)
-    
+
     coordinator = AucklandRubbishCollectionCoordinator(hass, address_id, address_name)
     hass.data[DOMAIN][entry.entry_id] = coordinator
-    
+
     return coordinator
