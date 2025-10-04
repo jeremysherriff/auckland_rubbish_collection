@@ -1,4 +1,5 @@
 import datetime
+from datetime import date
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, _LOGGER
@@ -13,13 +14,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
     # Get the coordinator
     coordinator = get_coordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-    
+
     async_add_entities([CollectionTodayBinarySensor(coordinator)])
 
 class CollectionTodayBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Binary sensor indicating whether there is a rubbish collection today."""
     def __init__(self, coordinator):
         super().__init__(coordinator)
+        _LOGGER.debug("Adding Sensor: collection_today")
         self.coordinator = coordinator
         self._attr_name = f"{coordinator.address_name} Collection Today"
         self._attr_unique_id = f"{DOMAIN}_{slugify(coordinator.address_name)}_collection_today"
@@ -30,14 +32,16 @@ class CollectionTodayBinarySensor(CoordinatorEntity, BinarySensorEntity):
         if not self.coordinator.data:
             _LOGGER.warning("Collection data is not yet available.")
             return False
-        today = datetime.datetime.now().strftime("%A %d %B")  # Format: "Thursday 13 March"
-        return any(
-            date == today for date in [
-                self.coordinator.data.get("rubbish"),
-                self.coordinator.data.get("recycling"),
-                self.coordinator.data.get("food_scraps")
-            ] if date
-        )
+        today = date.today()
+        for key in ("rubbish", "recycling", "food_scraps"):
+            raw = self.coordinator.data.get(key)
+            if raw:
+                try:
+                    if date.fromisoformat(raw) == today:
+                        return True
+                except ValueError:
+                    _LOGGER.warning("Invalid date format for %s: %s", key, raw)
+        return False
 
     @property
     def device_info(self):
