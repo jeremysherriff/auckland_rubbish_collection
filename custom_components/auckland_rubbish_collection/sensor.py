@@ -79,9 +79,15 @@ class RubbishCollectionSensor(CoordinatorEntity, SensorEntity):
             value = self.coordinator.data.get(self.sensor_type, None)
             if value:
                 try:
-                    day_name = datetime.datetime.strptime(value, "%Y-%m-%d").strftime("%A")
+                    # Parse as a pure date (no timezone)
+                    date_only = datetime.datetime.strptime(value, "%Y-%m-%d").date()
+                    day_name = date_only.strftime("%A")
                     attributes["collection_day"] = day_name
-                    _LOGGER.debug("Adding attribute to Sensor [%s] collection_day: %s", self.sensor_type, day_name)
+                    _LOGGER.debug(
+                        "Adding attribute to Sensor [%s] collection_day: %s",
+                        self.sensor_type,
+                        day_name,
+                    )
                 except ValueError as e:
                     pass
             return attributes
@@ -101,12 +107,23 @@ class RubbishCollectionSensor(CoordinatorEntity, SensorEntity):
 
             if next_date:
                 try:
-                    day_name = datetime.datetime.strptime(next_date, "%Y-%m-%d").strftime("%A")
+                    # Parse as a pure date (no timezone, no datetime)
+                    date_only = datetime.datetime.strptime(next_date, "%Y-%m-%d").date()
+                    day_name = date_only.strftime("%A")
+
                     attributes["date"] = next_date
                     attributes["day"] = day_name
-                    _LOGGER.debug("Adding day/date attributes to Sensor [%s]", self.sensor_type)
+
+                    _LOGGER.debug(
+                        "Adding day/date attributes to Sensor [%s]",
+                        self.sensor_type,
+                    )
                 except ValueError:
-                    _LOGGER.warning("Invalid ISO date when adding day/date attributes to Sensor [%s]: %s, %s", self.sensor_type, lookup_key, next_date)
+                    _LOGGER.warning(
+                        "Invalid ISO date when adding day/date attributes to Sensor [%s]: %s",
+                        self.sensor_type,
+                        next_date,
+                    )
             return attributes
 
     @property
