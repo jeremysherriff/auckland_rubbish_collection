@@ -24,6 +24,20 @@ class AucklandRubbishCollectionCoordinator(DataUpdateCoordinator):
 
         try:
             parsed = parser.parse(text, dayfirst=True)
+            # Year rollover fix:
+            # If today is December and the parsed month is January,
+            # assume the date refers to next year.
+            today = datetime.date.today()
+            if today.month == 12 and parsed.month == 1:
+                _LOGGER.debug(
+                    "Year rollover detected for '%s': parsed month=January while today is in December. "
+                    "Adjusting year from %s to %s.",
+                    text,
+                    parsed.year,
+                    parsed.year + 1,
+                )
+                parsed = parsed.replace(year=today.year + 1)
+
             return parsed.date().isoformat()
         except Exception:
             return None
