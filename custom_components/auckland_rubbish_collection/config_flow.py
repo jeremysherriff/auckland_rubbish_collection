@@ -30,7 +30,7 @@ class AucklandRubbishConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_ADDRESS_ID): str,
         })
         description_placeholders = {
-            "url": "https://new.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days.html"
+            "url": "https://www.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days.html"
         }
         return self.async_show_form(
             step_id="user",
@@ -66,7 +66,7 @@ class AucklandRubbishOptionsFlow(config_entries.OptionsFlow):
             vol.Required(CONF_ADDRESS_ID, default=self.entry.options.get(CONF_ADDRESS_ID, self.entry.data.get(CONF_ADDRESS_ID, ""))): str,
         })
         description_placeholders = {
-            "url": "https://new.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days.html"
+            "url": "https://www.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days.html"
         }
         return self.async_show_form(
             step_id="init",

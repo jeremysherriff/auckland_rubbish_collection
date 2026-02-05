@@ -13,7 +13,7 @@ Or: manually add this github repo as a custom repository in HACS then search for
 You will need to restart Home Assistant before proceeding.
 
 ## Setup
-Requires that you find the "Assessment number" value from the Auckland Council [Find your rubbish, recycling, and food scraps collection day](https://new.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days.html) page.
+Requires that you find the "Assessment number" value from the Auckland Council [Find your rubbish, recycling, and food scraps collection day](https://www.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days.html) page.
 
 1.  Browse to the above page
 2.  Enter your address, and click to select it
