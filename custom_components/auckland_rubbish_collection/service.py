@@ -8,7 +8,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN, _LOGGER
 
 SCAN_INTERVAL = timedelta(hours=5)
-BASE_URL = "https://new.aucklandcouncil.govt.nz"
+BASE_URL = "https://www.aucklandcouncil.govt.nz"
 
 class AucklandRubbishCollectionCoordinator(DataUpdateCoordinator):
     """Fetch rubbish collection data periodically."""
@@ -65,11 +65,33 @@ class AucklandRubbishCollectionCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         url = f"{BASE_URL}/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days/{self.address_id}.html"
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/122.0 Safari/537.36"
+            ),
+            "Accept": (
+                "text/html,application/xhtml+xml,application/xml;"
+                "q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
+            ),
+            "Accept-Language": "en-NZ,en;q=0.9",
+            "Referer": f"{BASE_URL}/en/rubbish-recycling/"
+                       "rubbish-recycling-collections/"
+                       "rubbish-recycling-collection-days.html",
+            "Sec-Fetch-Site": "same-origin",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Dest": "document",
+        }
         session = async_get_clientsession(self.hass)
         try:
             _LOGGER.debug("Fetching collection data for entry: %s", self.address_name)
-            async with session.get(url) as response:
+            async with session.get(url, headers=headers) as response:
                 response_text = await response.text()
+                _LOGGER.debug("Response: (status %s)\n%s",
+                    response.status,
+                    response_text[:200]
+                )
             soup = BeautifulSoup(response_text, "html.parser")
 
             # Extract geolocation address
