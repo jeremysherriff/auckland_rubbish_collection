@@ -16,7 +16,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     # Get the coordinator
     coordinator = get_coordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
 
     async_add_entities([
         RubbishCollectionSensor(coordinator, "rubbish"),
