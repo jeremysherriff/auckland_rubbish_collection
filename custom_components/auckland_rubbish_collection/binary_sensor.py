@@ -13,8 +13,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Collection Today binary sensor."""
     # Get the coordinator
     coordinator = get_coordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
-
     async_add_entities([CollectionTodayBinarySensor(coordinator)])
 
 class CollectionTodayBinarySensor(CoordinatorEntity, BinarySensorEntity):
@@ -58,3 +56,4 @@ class CollectionTodayBinarySensor(CoordinatorEntity, BinarySensorEntity):
     def icon(self):
         """Return the icon to use in the frontend."""
         return "mdi:trash-can-outline"
+
