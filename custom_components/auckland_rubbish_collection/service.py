@@ -1,8 +1,8 @@
 import aiohttp
 import asyncio
-import datetime
 from bs4 import BeautifulSoup
-from datetime import timedelta
+from datetime import date, timedelta
+from dateutil import parser
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN, _LOGGER
@@ -20,14 +20,13 @@ class AucklandRubbishCollectionCoordinator(DataUpdateCoordinator):
 
     def parse_collection_date(self, text: str) -> str | None:
         """Convert collection text (e.g., 'Thursday, 13 March') into ISO 8601 format ('YYYY-MM-DD')"""
-        from dateutil import parser
 
         try:
             parsed = parser.parse(text, dayfirst=True)
             # Year rollover fix:
             # If today is December and the parsed month is January,
             # assume the date refers to next year.
-            today = datetime.date.today()
+            today = date.today()
             if today.month == 12 and parsed.month == 1:
                 _LOGGER.debug(
                     "Year rollover detected for '%s': parsed month=January while today is in December. "
