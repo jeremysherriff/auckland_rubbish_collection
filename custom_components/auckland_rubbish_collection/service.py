@@ -75,12 +75,18 @@ class AucklandRubbishCollectionCoordinator(DataUpdateCoordinator):
                 "q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
             ),
             "Accept-Language": "en-NZ,en;q=0.9",
-            "Referer": f"{BASE_URL}/en/rubbish-recycling/"
+            "Accept-Encoding": "gzip, deflate, br",
+            "Referer": "https://www.aucklandcouncil.govt.nz/en/rubbish-recycling/"
                        "rubbish-recycling-collections/"
                        "rubbish-recycling-collection-days.html",
             "Sec-Fetch-Site": "same-origin",
             "Sec-Fetch-Mode": "navigate",
             "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-User": "?1",
+            "Upgrade-Insecure-Requests": "1",
+            "sec-ch-ua": '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
         }
         session = async_get_clientsession(self.hass)
         try:
