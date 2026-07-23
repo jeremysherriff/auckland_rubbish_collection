@@ -93,6 +93,7 @@ class AucklandRubbishCollectionCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("Fetching collection data for entry: %s", self.address_name)
             async with session.get(url, headers=headers) as response:
                 response_text = await response.text()
+                # Todo: log Error rather than debug on non-200 responses
                 _LOGGER.debug("Response: (status %s)\n%s",
                     response.status,
                     response_text[:200]
